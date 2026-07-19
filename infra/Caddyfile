@@ -1,0 +1,16 @@
+# Caddy reverse proxy.
+#   - DOMAIN=your.domain.com  -> automatic HTTPS via Let's Encrypt (production)
+#   - DOMAIN=:80              -> plain HTTP (local development)
+{$DOMAIN:localhost} {
+	encode gzip
+
+	# API traffic → backend (full /api/v1/* path is preserved).
+	handle /api/* {
+		reverse_proxy backend:8090
+	}
+
+	# Everything else → Next.js frontend.
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
