@@ -5,3 +5,7 @@ build/
 .env.local
 .DS_Store
 *.tsbuildinfo
+
+# The repo-root .gitignore has a Python `lib/` rule; keep our source lib/ tracked.
+!lib/
+!lib/**
