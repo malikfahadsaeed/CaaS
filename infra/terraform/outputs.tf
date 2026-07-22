@@ -14,6 +14,6 @@ output "site_url" {
 }
 
 output "dns_setup_hint" {
-  description = "DNS record to create"
-  value       = "Create an A record: ${var.domain_name} -> ${aws_eip.app.public_ip}"
+  description = "DNS record to point at the app (e.g. via DuckDNS)"
+  value       = "Point ${var.domain_name} -> ${aws_eip.app.public_ip}"
 }

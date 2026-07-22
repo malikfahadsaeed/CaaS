@@ -81,25 +81,35 @@ npm run build
 ## Deploy to AWS
 
 Prerequisites: an AWS account with credentials configured, Terraform ≥ 1.5, an
-SSH key pair, a domain you control, and the container images published to
-`ghcr.io` (push to `main` triggers CI; make the two packages **public** so the
-instance can pull them without auth).
+SSH key pair, a domain, and the container images published to `ghcr.io` (push to
+`main` triggers CI; make the two packages **public** so the instance can pull
+them without auth).
 
-```bash
-cd infra/terraform
-cp terraform.tfvars.example terraform.tfvars   # edit: domain, your IP/32, image_owner, key path
-terraform init
-terraform plan
-terraform apply
-```
+### DNS + SSL
 
-Then point DNS at the Elastic IP and browse to your domain:
+DNS is a free **DuckDNS** subdomain; TLS is **Caddy + Let's Encrypt** (free,
+auto-renewing). No paid DNS, no ACM/ALB — and the static Elastic IP is preserved.
 
-```bash
-terraform output           # public_ip, site_url, dns_setup_hint
-# Create an A record: <domain_name> -> <public_ip>
-# Caddy issues the Let's Encrypt cert automatically on first HTTPS request.
-```
+1. At [duckdns.org](https://www.duckdns.org) (sign in with GitHub/Google), create
+   a subdomain, e.g. `your-name.duckdns.org`, and copy your **token**.
+2. Set `domain_name = "your-name.duckdns.org"` in `terraform.tfvars`, then apply:
+
+   ```bash
+   cd infra/terraform
+   cp terraform.tfvars.example terraform.tfvars   # edit: domain, your IP/32, image_owner, key path
+   terraform init && terraform plan && terraform apply
+   ```
+
+3. Point the DuckDNS subdomain at the Elastic IP (one-time — the IP is static):
+
+   ```bash
+   EIP=$(terraform output -raw public_ip)
+   curl "https://www.duckdns.org/update?domains=your-name&token=YOUR_TOKEN&ip=$EIP"   # prints OK
+   ```
+
+Once DNS resolves to the Elastic IP, Caddy issues the Let's Encrypt cert
+automatically on the first HTTPS request (it retries, so order isn't critical).
+Verify by browsing to `https://your-name.duckdns.org`.
 
 ### Redeploy new images
 
