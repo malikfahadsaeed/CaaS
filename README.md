@@ -1,75 +1,102 @@
-# CaaS — Chatbot-as-a-Service (Milestone 1)
+# Nimbus — Chatbot-as-a-Service (CaaS)
 
-A minimal but production-shaped chatbot platform: a customizable Next.js chat UI,
-a FastAPI backend, all served over HTTPS from a single AWS EC2 instance with a
-static public IP. Milestone 1 keeps the backend deliberately simple (it replies
-with a fixed greeting) while establishing the full end-to-end architecture so
-real features (LLM, auth, persistence) can be added without re-architecting.
+[![CI](https://github.com/malikfahadsaeed/CaaS/actions/workflows/ci.yml/badge.svg)](https://github.com/malikfahadsaeed/CaaS/actions/workflows/ci.yml)
+
+A cloud-native **Chatbot-as-a-Service** platform: a customizable chat interface
+backed by a FastAPI service, fully containerized and deployed to AWS over HTTPS.
+
+This repository is the **foundation release** — a complete, production-shaped
+slice (frontend, API, TLS, infrastructure-as-code, CI/CD) built so richer
+capabilities (real LLM responses, authentication, persistence, multi-tenancy)
+can be added without re-architecting. The backend currently returns a fixed
+assistant greeting; the service layer is the single seam where an LLM plugs in.
+
+## Features
+
+- 💬 **Customizable chat UI** — responsive Next.js + Tailwind interface, light/dark
+  aware, fully re-brandable from a single theme file.
+- ⚡ **FastAPI backend** — clean layered architecture (routes → services), typed,
+  with a consistent response envelope and unit tests.
+- 🔒 **HTTPS out of the box** — Caddy reverse proxy with automatic, auto-renewing
+  Let's Encrypt certificates.
+- ☁️ **Infrastructure as code** — one `terraform apply` provisions the full AWS
+  stack (VPC, EC2, Elastic IP, security group).
+- 🚀 **CI/CD** — GitHub Actions lints, type-checks, tests, and publishes container
+  images to GitHub Container Registry.
+- 🐳 **Container-first** — a single `docker compose up` runs the whole stack locally.
 
 ## Architecture
 
 ```
-User ──HTTPS──▶ Elastic IP ──▶ EC2 (public subnet, SG: 22/80/443)
-                                 └─ Caddy (auto Let's Encrypt TLS)
-                                      /       ──▶ frontend (Next.js :3000)
-                                      /api/*  ──▶ backend  (FastAPI :8090)
+                    Internet
+                       │  HTTPS
+        DNS ──────▶ Elastic IP ──▶ EC2 (Amazon Linux 2023)
+                                     └─ Caddy  (TLS termination, reverse proxy)
+                                          ├─ /        → Frontend  (Next.js · :3000)
+                                          └─ /api/*   → Backend   (FastAPI · :8090)
 ```
 
-See [docs/architecture.drawio](docs/architecture.drawio) (open at
-[app.diagrams.net](https://app.diagrams.net)) for the full resource diagram.
+The full resource diagram is in [docs/architecture.drawio](docs/architecture.drawio)
+(open at [app.diagrams.net](https://app.diagrams.net)).
 
-- **Hosting:** single EC2 instance running Docker Compose, with an Elastic IP.
-- **TLS:** Caddy reverse proxy auto-issues/renews a Let's Encrypt certificate.
-- **IaC:** Terraform provisions the VPC, subnet, gateway, security group, key
-  pair, EC2 instance, and Elastic IP.
-- **CI/CD:** GitHub Actions builds and pushes images to `ghcr.io`.
-- **Database:** intentionally deferred — added when a feature needs it.
+## Tech stack
 
-## Repository layout
-
-| Path | What |
+| Layer | Technology |
 | --- | --- |
-| `backend/` | FastAPI app (routes → services), tests, Dockerfile |
-| `frontend/` | Next.js App Router UI, customizable theme, Dockerfile |
-| `infra/Caddyfile` | Reverse-proxy + TLS config |
-| `infra/docker-compose.prod.yml` | Production stack (pulls ghcr images) |
-| `infra/terraform/` | AWS infrastructure |
-| `docker-compose.yml` | Local dev stack (builds from source) |
-| `.github/workflows/ci.yml` | CI: lint/test/build + push images |
-| `docs/architecture.drawio` | Architecture diagram |
+| Frontend | Next.js (App Router), TypeScript, Tailwind CSS |
+| Backend | Python 3.12, FastAPI, Pydantic, uv |
+| Reverse proxy / TLS | Caddy + Let's Encrypt |
+| Infrastructure | AWS (EC2, VPC, Elastic IP), Terraform |
+| CI/CD | GitHub Actions, GitHub Container Registry (ghcr.io) |
+| Runtime | Docker, Docker Compose |
 
-## Local development
+## Project structure
 
-Run the whole stack behind Caddy (plain HTTP locally):
+```
+.
+├── backend/                # FastAPI service (routes → services), tests
+├── frontend/               # Next.js chat UI (components, theme, API client)
+├── infra/
+│   ├── Caddyfile           # reverse-proxy + TLS config
+│   ├── docker-compose.prod.yml
+│   └── terraform/          # AWS infrastructure
+├── docker-compose.yml      # local development stack
+├── docs/architecture.drawio
+└── .github/workflows/ci.yml
+```
+
+## Getting started (local)
+
+Run the entire stack behind Caddy:
 
 ```bash
 docker compose up --build
-# open http://localhost  → send a message, get the greeting back
+# open http://localhost
 ```
 
-Or run each app directly:
+Or run each service directly for development:
 
 ```bash
-# Backend (http://localhost:8090)
+# Backend → http://localhost:8090
 cd backend
 cp env.example .env
 uv run uvicorn app.main:app --reload --port 8090
 
-# Frontend (http://localhost:3000)
+# Frontend → http://localhost:3000
 cd frontend
-cp env.example .env.local   # set NEXT_PUBLIC_API_BASE_URL=http://localhost:8090/api/v1
+cp env.example .env.local     # set NEXT_PUBLIC_API_BASE_URL=http://localhost:8090/api/v1
 npm install
 npm run dev
 ```
 
-## Tests & checks
+## Testing & quality
 
 ```bash
 # Backend
 cd backend
-uv run ruff check .
-uv run mypy app
-uv run pytest -q
+uv run ruff check .      # lint
+uv run mypy app          # types
+uv run pytest -q         # tests
 
 # Frontend
 cd frontend
@@ -78,57 +105,53 @@ npm run typecheck
 npm run build
 ```
 
-## Deploy to AWS
+## Deployment (AWS)
 
-Prerequisites: an AWS account with credentials configured, Terraform ≥ 1.5, an
-SSH key pair, a domain, and the container images published to `ghcr.io` (push to
-`main` triggers CI; make the two packages **public** so the instance can pull
-them without auth).
+**Prerequisites:** an AWS account with credentials configured (`aws configure`),
+Terraform ≥ 1.5, an SSH key pair, a domain (a free [DuckDNS](https://www.duckdns.org)
+subdomain works), and the container images published to ghcr.io.
 
-### DNS + SSL
-
-DNS is a free **DuckDNS** subdomain; TLS is **Caddy + Let's Encrypt** (free,
-auto-renewing). No paid DNS, no ACM/ALB — and the static Elastic IP is preserved.
-
-1. At [duckdns.org](https://www.duckdns.org) (sign in with GitHub/Google), create
-   a subdomain, e.g. `your-name.duckdns.org`, and copy your **token**.
-2. Set `domain_name = "your-name.duckdns.org"` in `terraform.tfvars`, then apply:
-
+1. **Publish images** — merging to `main` triggers CI to build and push
+   `caas-backend` and `caas-frontend` to ghcr.io. Set both packages to **public**
+   so the instance can pull them without authentication.
+2. **Configure** — copy the example vars and fill them in (kept local; never
+   committed):
    ```bash
    cd infra/terraform
-   cp terraform.tfvars.example terraform.tfvars   # edit: domain, your IP/32, image_owner, key path
+   cp terraform.tfvars.example terraform.tfvars   # domain, your IP/32, ghcr owner, key path
+   ```
+3. **Provision** — Terraform creates the VPC, EC2 instance, security group, and a
+   static Elastic IP; the instance bootstraps Docker and starts the stack:
+   ```bash
    terraform init && terraform plan && terraform apply
    ```
-
-3. Point the DuckDNS subdomain at the Elastic IP (one-time — the IP is static):
-
+4. **Point DNS** at the Elastic IP:
    ```bash
-   EIP=$(terraform output -raw public_ip)
-   curl "https://www.duckdns.org/update?domains=your-name&token=YOUR_TOKEN&ip=$EIP"   # prints OK
+   curl "https://www.duckdns.org/update?domains=<subdomain>&token=<token>&ip=$(terraform output -raw public_ip)"
    ```
 
-Once DNS resolves to the Elastic IP, Caddy issues the Let's Encrypt cert
-automatically on the first HTTPS request (it retries, so order isn't critical).
-Verify by browsing to `https://your-name.duckdns.org`.
+Caddy issues the Let's Encrypt certificate automatically on the first HTTPS
+request. Browse to `https://<your-domain>` — done.
 
-### Redeploy new images
+### Redeploy
 
 ```bash
-ssh ec2-user@<public_ip>
+ssh -i <key> ec2-user@<elastic-ip>
 cd /opt/caas && docker compose pull && docker compose up -d
 ```
 
 ### Teardown
 
 ```bash
-cd infra/terraform
-terraform destroy
+cd infra/terraform && terraform destroy
 ```
 
-## Notes / deferred for later milestones
+## Roadmap
 
-- No database, auth, or real LLM yet — `app/services/chat_service.py` is the seam
-  where an LLM plugs in.
-- Terraform state is local; move to an S3 + DynamoDB backend as the team grows.
-- Single EC2 is the Milestone 1 tradeoff; the documented scale target is
-  ECS Fargate + ALB.
+The service layer and infrastructure are intentionally extensible. Planned next:
+
+- Real LLM-backed responses (drop-in at the chat service layer)
+- Authentication and per-tenant configuration
+- Persistence (PostgreSQL + migrations)
+- Remote Terraform state and a managed, horizontally scalable runtime
+  (e.g. ECS Fargate + ALB)
