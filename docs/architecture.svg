@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+    <marker id="arrowO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d79b00"/>
+    </marker>
+    <marker id="arrowP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9673a6"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="640" fill="#ffffff"/>
+
+  <!-- containers -->
+  <rect x="210" y="24" width="766" height="470" rx="6" fill="none" stroke="#232f3e"/>
+  <text x="224" y="44" fill="#232f3e" font-weight="bold">AWS Cloud · us-east-2</text>
+
+  <rect x="392" y="72" width="560" height="336" fill="none" stroke="#248814"/>
+  <text x="404" y="90" fill="#248814" font-weight="bold">VPC · 10.0.0.0/16</text>
+
+  <rect x="412" y="106" width="520" height="284" fill="#eaf3ff" stroke="#3399ff"/>
+  <text x="424" y="124" fill="#00618d" font-weight="bold">Public subnet · 10.0.1.0/24</text>
+
+  <rect x="432" y="140" width="480" height="232" fill="none" stroke="#b85450" stroke-dasharray="5 3"/>
+  <text x="444" y="158" fill="#b85450" font-size="11">Security Group · inbound 22 / 80 / 443</text>
+
+  <rect x="452" y="176" width="440" height="176" fill="#fff5d6" stroke="#d6b656"/>
+  <text x="464" y="194" fill="#7f6000" font-size="11" font-weight="bold">EC2 · Amazon Linux 2023 · Docker Compose</text>
+
+  <!-- left column -->
+  <g text-anchor="middle">
+    <rect x="24" y="46" width="150" height="52" rx="6" fill="#ffe6cc" stroke="#d79b00"/>
+    <text x="99" y="68">Let's Encrypt</text>
+    <text x="99" y="84" fill="#555">(automatic TLS)</text>
+
+    <rect x="24" y="150" width="150" height="56" rx="6" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="99" y="172">DuckDNS</text>
+    <text x="99" y="188" fill="#555">A record → Elastic IP</text>
+
+    <rect x="24" y="278" width="150" height="56" rx="6" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="99" y="300">User</text>
+    <text x="99" y="316" fill="#555">(web browser)</text>
+
+    <rect x="24" y="418" width="150" height="56" rx="6" fill="#e9dbf3" stroke="#9673a6"/>
+    <text x="99" y="440">Terraform (IaC)</text>
+    <text x="99" y="456" fill="#555">provisions AWS</text>
+  </g>
+
+  <!-- aws nodes -->
+  <g text-anchor="middle">
+    <rect x="236" y="278" width="120" height="56" rx="6" fill="#ffe6cc" stroke="#d79b00"/>
+    <text x="296" y="300">Elastic IP</text>
+    <text x="296" y="316" fill="#555">(static)</text>
+
+    <rect x="470" y="228" width="156" height="66" rx="6" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="548" y="256">Caddy</text>
+    <text x="548" y="274" fill="#555">TLS + reverse proxy</text>
+
+    <rect x="690" y="206" width="182" height="52" rx="6" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="781" y="236">Frontend · Next.js :3000</text>
+
+    <rect x="690" y="294" width="182" height="52" rx="6" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="781" y="324">Backend · FastAPI :8090</text>
+  </g>
+
+  <!-- CI/CD -->
+  <text x="410" y="536" fill="#9673a6" font-weight="bold" font-size="11">CI / CD</text>
+  <g text-anchor="middle">
+    <rect x="410" y="544" width="130" height="48" rx="6" fill="#e9dbf3" stroke="#9673a6"/>
+    <text x="475" y="572">GitHub</text>
+
+    <rect x="580" y="544" width="150" height="48" rx="6" fill="#e9dbf3" stroke="#9673a6"/>
+    <text x="655" y="572">GitHub Actions</text>
+
+    <rect x="770" y="544" width="160" height="48" rx="6" fill="#e9dbf3" stroke="#9673a6"/>
+    <text x="850" y="572">ghcr.io registry</text>
+  </g>
+
+  <!-- request-path edges -->
+  <g fill="#555">
+    <line x1="99" y1="278" x2="99" y2="206" stroke="#555" marker-end="url(#arrow)"/>
+    <line x1="174" y1="180" x2="236" y2="296" stroke="#555" marker-end="url(#arrow)"/>
+    <line x1="174" y1="306" x2="236" y2="306" stroke="#6c8ebf" marker-end="url(#arrow)"/>
+    <text x="205" y="300" text-anchor="middle" fill="#6c8ebf" font-size="11">HTTPS</text>
+    <line x1="356" y1="300" x2="470" y2="262" stroke="#555" marker-end="url(#arrow)"/>
+    <line x1="626" y1="250" x2="690" y2="234" stroke="#555" marker-end="url(#arrow)"/>
+    <text x="662" y="232" text-anchor="middle" font-size="11">/</text>
+    <line x1="626" y1="276" x2="690" y2="316" stroke="#555" marker-end="url(#arrow)"/>
+    <text x="655" y="306" text-anchor="middle" font-size="11">/api/*</text>
+  </g>
+
+  <!-- lets encrypt to caddy (dashed) -->
+  <path d="M174,72 C320,110 380,170 468,230" fill="none" stroke="#d79b00" stroke-dasharray="5 3" marker-end="url(#arrowO)"/>
+  <text x="300" y="140" fill="#d79b00" font-size="11">cert</text>
+
+  <!-- terraform provisions AWS (dashed) -->
+  <line x1="174" y1="446" x2="210" y2="446" stroke="#9673a6" stroke-dasharray="5 3" marker-end="url(#arrowP)"/>
+  <text x="192" y="438" text-anchor="middle" fill="#9673a6" font-size="11">provisions</text>
+
+  <!-- ci/cd edges -->
+  <g stroke="#9673a6">
+    <line x1="540" y1="568" x2="580" y2="568" marker-end="url(#arrowP)"/>
+    <line x1="730" y1="568" x2="770" y2="568" marker-end="url(#arrowP)"/>
+    <path d="M850,544 C850,460 780,400 672,352" fill="none" stroke-dasharray="5 3" marker-end="url(#arrowP)"/>
+  </g>
+  <text x="755" y="562" text-anchor="middle" fill="#9673a6" font-size="11">push</text>
+  <text x="812" y="446" fill="#9673a6" font-size="11">pull</text>
+</svg>
