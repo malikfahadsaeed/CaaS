@@ -9,7 +9,7 @@
         <mxCell id="user" value="User&#10;(Web Browser)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="40" y="360" width="120" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="dns" value="DNS&#10;A record: chat.example.com&#10;→ Elastic IP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+        <mxCell id="dns" value="DNS (DuckDNS)&#10;A record → Elastic IP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="30" y="180" width="150" height="70" as="geometry" />
         </mxCell>
         <mxCell id="le" value="Let's Encrypt&#10;(ACME CA)&#10;auto TLS certs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
@@ -17,7 +17,7 @@
         </mxCell>
 
         <!-- AWS Cloud boundary -->
-        <mxCell id="aws" value="AWS Cloud — region ap-south-1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=none;strokeColor=#232F3E;fontColor=#232F3E;fontStyle=1;dashed=0;" vertex="1" parent="1">
+        <mxCell id="aws" value="AWS Cloud — region us-east-2" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=none;strokeColor=#232F3E;fontColor=#232F3E;fontStyle=1;dashed=0;" vertex="1" parent="1">
           <mxGeometry x="240" y="40" width="740" height="560" as="geometry" />
         </mxCell>
 

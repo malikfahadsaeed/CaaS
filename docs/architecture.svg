@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+    <marker id="arrowO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d79b00"/>
+    </marker>
+    <marker id="arrowP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9673a6"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="640" fill="#ffffff"/>
+
+  <!-- containers -->
+  <rect x="210" y="24" width="766" height="512" rx="6" fill="none" stroke="#232f3e"/>
+  <text x="224" y="44" fill="#232f3e" font-weight="bold">AWS Cloud · us-east-2</text>
+
+  <rect x="392" y="72" width="560" height="372" fill="none" stroke="#248814"/>
+  <text x="404" y="90" fill="#248814" font-weight="bold">VPC · 10.0.0.0/16</text>
+
+  <rect x="412" y="106" width="520" height="320" fill="#eaf3ff" stroke="#3399ff"/>
+  <text x="424" y="124" fill="#00618d" font-weight="bold">Public subnet · 10.0.1.0/24</text>
+
+  <rect x="432" y="140" width="480" height="268" fill="none" stroke="#b85450" stroke-dasharray="5 3"/>
+  <text x="444" y="158" fill="#b85450" font-size="11">Security Group · inbound 22 / 80 / 443</text>
+
+  <rect x="452" y="176" width="440" height="212" fill="#fff5d6" stroke="#d6b656"/>
+  <text x="464" y="194" fill="#7f6000" font-size="11" font-weight="bold">EC2 · Amazon Linux 2023 · Docker Compose</text>
+
+  <!-- left column -->
+  <g text-anchor="middle">
+    <rect x="24" y="46" width="150" height="52" rx="6" fill="#ffe6cc" stroke="#d79b00"/>
+    <text x="99" y="68">Let's Encrypt</text>
+    <text x="99" y="84" fill="#555">(automatic TLS)</text>
+
+    <rect x="24" y="166" width="150" height="56" rx="6" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="99" y="188">DuckDNS</text>
+    <text x="99" y="204" fill="#555">A record → Elastic IP</text>
+
+    <rect x="24" y="314" width="150" height="56" rx="6" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="99" y="336">User</text>
+    <text x="99" y="352" fill="#555">(web browser)</text>
+  </g>
+
+  <!-- aws nodes -->
+  <g text-anchor="middle">
+    <rect x="236" y="314" width="120" height="56" rx="6" fill="#ffe6cc" stroke="#d79b00"/>
+    <text x="296" y="336">Elastic IP</text>
+    <text x="296" y="352" fill="#555">(static)</text>
+
+    <rect x="470" y="234" width="156" height="66" rx="6" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="548" y="262">Caddy</text>
+    <text x="548" y="280" fill="#555">TLS + reverse proxy</text>
+
+    <rect x="690" y="212" width="182" height="52" rx="6" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="781" y="242">Frontend · Next.js :3000</text>
+
+    <rect x="690" y="300" width="182" height="52" rx="6" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="781" y="330">Backend · FastAPI :8090</text>
+  </g>
+
+  <!-- CI/CD -->
+  <text x="236" y="568" fill="#9673a6" font-weight="bold" font-size="11">CI / CD</text>
+  <g text-anchor="middle">
+    <rect x="236" y="576" width="130" height="48" rx="6" fill="#e9dbf3" stroke="#9673a6"/>
+    <text x="301" y="604">GitHub</text>
+
+    <rect x="410" y="576" width="150" height="48" rx="6" fill="#e9dbf3" stroke="#9673a6"/>
+    <text x="485" y="604">GitHub Actions</text>
+
+    <rect x="606" y="576" width="160" height="48" rx="6" fill="#e9dbf3" stroke="#9673a6"/>
+    <text x="686" y="604">ghcr.io registry</text>
+  </g>
+
+  <!-- edges -->
+  <g fill="#555">
+    <!-- user up to duckdns -->
+    <line x1="99" y1="314" x2="99" y2="222" stroke="#555" marker-end="url(#arrow)"/>
+    <!-- duckdns to eip -->
+    <line x1="174" y1="196" x2="236" y2="330" stroke="#555" marker-end="url(#arrow)"/>
+    <!-- user to eip (https) -->
+    <line x1="174" y1="342" x2="236" y2="342" stroke="#6c8ebf" marker-end="url(#arrow)"/>
+    <text x="205" y="336" text-anchor="middle" fill="#6c8ebf" font-size="11">HTTPS</text>
+    <!-- eip to caddy -->
+    <line x1="356" y1="336" x2="470" y2="278" stroke="#555" marker-end="url(#arrow)"/>
+    <!-- caddy to frontend -->
+    <line x1="626" y1="256" x2="690" y2="240" stroke="#555" marker-end="url(#arrow)"/>
+    <text x="662" y="238" text-anchor="middle" font-size="11">/</text>
+    <!-- caddy to backend -->
+    <line x1="626" y1="282" x2="690" y2="322" stroke="#555" marker-end="url(#arrow)"/>
+    <text x="655" y="312" text-anchor="middle" font-size="11">/api/*</text>
+  </g>
+
+  <!-- lets encrypt to caddy (dashed) -->
+  <path d="M174,72 C320,120 380,180 468,236" fill="none" stroke="#d79b00" stroke-dasharray="5 3" marker-end="url(#arrowO)"/>
+  <text x="300" y="150" fill="#d79b00" font-size="11">cert</text>
+
+  <!-- ci/cd edges -->
+  <g stroke="#9673a6">
+    <line x1="366" y1="600" x2="410" y2="600" marker-end="url(#arrowP)"/>
+    <line x1="560" y1="600" x2="606" y2="600" marker-end="url(#arrowP)"/>
+    <path d="M686,576 C686,470 686,440 686,388" fill="none" stroke-dasharray="5 3" marker-end="url(#arrowP)"/>
+  </g>
+  <text x="583" y="592" text-anchor="middle" fill="#9673a6" font-size="11">push</text>
+  <text x="700" y="470" fill="#9673a6" font-size="11">pull</text>
+</svg>
