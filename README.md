@@ -27,17 +27,11 @@ assistant greeting; the service layer is the single seam where an LLM plugs in.
 
 ## Architecture
 
-```
-                    Internet
-                       │  HTTPS
-        DNS ──────▶ Elastic IP ──▶ EC2 (Amazon Linux 2023)
-                                     └─ Caddy  (TLS termination, reverse proxy)
-                                          ├─ /        → Frontend  (Next.js · :3000)
-                                          └─ /api/*   → Backend   (FastAPI · :8090)
-```
+![Architecture diagram](docs/architecture.svg)
 
-The full resource diagram is in [docs/architecture.drawio](docs/architecture.drawio)
-(open at [app.diagrams.net](https://app.diagrams.net)).
+*Editable source: [docs/architecture.drawio](docs/architecture.drawio) — open at
+[app.diagrams.net](https://app.diagrams.net) or with the VS Code Draw.io extension.
+Re-export to `docs/architecture.svg` after edits.*
 
 ## Tech stack
 
