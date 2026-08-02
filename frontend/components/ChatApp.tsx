@@ -24,11 +24,14 @@ export function ChatApp() {
       if (isTyping) {
         return;
       }
+      // Snapshot prior turns so the backend (and Bedrock) get conversation
+      // context — the client is the only place history lives (no DB).
+      const history = messages.map(({ role, content }) => ({ role, content }));
       setMessages((prev) => [...prev, createMessage("user", text)]);
       setIsTyping(true);
 
       try {
-        const reply = await sendChatMessage(text);
+        const reply = await sendChatMessage(text, history);
         setMessages((prev) => [...prev, createMessage("assistant", reply)]);
       } catch {
         setMessages((prev) => [...prev, createMessage("assistant", ERROR_MESSAGE)]);
@@ -36,7 +39,7 @@ export function ChatApp() {
         setIsTyping(false);
       }
     },
-    [isTyping],
+    [isTyping, messages],
   );
 
   const handleNewChat = useCallback(() => {
