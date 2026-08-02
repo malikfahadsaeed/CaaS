@@ -15,5 +15,5 @@ async def chat(
     service: ChatService = Depends(get_chat_service),
 ) -> ResponseEnvelope[ChatResponse]:
     """Return the assistant's reply for the given message."""
-    reply = await service.generate_reply(payload.message)
+    reply = await service.generate_reply(payload.message, payload.history)
     return ResponseEnvelope(success=True, data=ChatResponse(reply=reply))

@@ -4,7 +4,7 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.core.constants import API_V1_PREFIX
+from app.core.constants import API_V1_PREFIX, DEFAULT_SYSTEM_PROMPT
 
 
 class Settings(BaseSettings):
@@ -17,6 +17,15 @@ class Settings(BaseSettings):
 
     # Comma-separated list of allowed CORS origins.
     cors_origins: str = "http://localhost:3000"
+
+    # Amazon Bedrock configuration. `bedrock_model_id` should be a foundation
+    # model id or a cross-region inference profile id (e.g. a `us.anthropic...`
+    # profile) available in `bedrock_region`. Verify availability and enable
+    # model access in the AWS console before use.
+    bedrock_model_id: str = "us.anthropic.claude-sonnet-4-20250514-v1:0"
+    bedrock_region: str = "us-east-2"
+    bedrock_max_tokens: int = 512
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

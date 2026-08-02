@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn[standard]>=0.32.0",
     "pydantic>=2.9.0",
     "pydantic-settings>=2.5.0",
+    "aioboto3>=13.0.0",
 ]
 
 [dependency-groups]
@@ -42,3 +43,8 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "f
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+
+# aioboto3/aiobotocore/botocore ship no type information.
+[[tool.mypy.overrides]]
+module = ["aioboto3.*", "aiobotocore.*", "botocore.*"]
+ignore_missing_imports = true
