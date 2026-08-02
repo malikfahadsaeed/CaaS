@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Produce a minimal standalone server bundle for slim Docker images.
-  output: "standalone",
+  // Emit a fully static site to `out/` for hosting on S3 + CloudFront.
+  // The app is a pure client SPA (no SSR/route handlers), so export is safe.
+  output: "export",
   reactStrictMode: true,
 };
 
