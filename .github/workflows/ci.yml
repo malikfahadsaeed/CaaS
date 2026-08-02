@@ -9,6 +9,15 @@ on:
 permissions:
   contents: read
 
+# Deploy jobs authenticate to AWS via GitHub OIDC (no long-lived keys) and read
+# these repository variables (populated from `terraform output`):
+#   AWS_REGION                  e.g. us-east-2
+#   AWS_DEPLOY_ROLE_ARN         gha_deploy_role_arn
+#   ECR_REPOSITORY              e.g. caas-backend
+#   LAMBDA_FUNCTION             lambda_function_name (e.g. caas-backend)
+#   FRONTEND_BUCKET             s3_bucket_name
+#   CLOUDFRONT_DISTRIBUTION_ID  cloudfront_distribution_id
+
 jobs:
   backend:
     name: Backend (lint, types, tests)
@@ -45,44 +54,86 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
 
-  build-and-push:
-    name: Build & push images
+  deploy-backend:
+    name: Deploy backend (ECR + Lambda)
     needs: [backend, frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
-    strategy:
-      matrix:
-        include:
-          - context: ./backend
-            image: caas-backend
-          - context: ./frontend
-            image: caas-frontend
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Log in to ghcr.io
-        uses: docker/login-action@v3
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPO: ${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t "$REGISTRY/$REPO:$IMAGE_TAG" -t "$REGISTRY/$REPO:latest" ./backend
+          docker push "$REGISTRY/$REPO:$IMAGE_TAG"
+          docker push "$REGISTRY/$REPO:latest"
+      - name: Update Lambda function code
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPO: ${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+          FUNCTION: ${{ vars.LAMBDA_FUNCTION }}
+        run: |
+          aws lambda update-function-code \
+            --function-name "$FUNCTION" \
+            --image-uri "$REGISTRY/$REPO:$IMAGE_TAG"
+          aws lambda wait function-updated --function-name "$FUNCTION"
+
+  deploy-frontend:
+    name: Deploy frontend (S3 + CloudFront)
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha
-      - name: Build and push
-        uses: docker/build-push-action@v6
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Build static export
+        env:
+          NEXT_PUBLIC_API_BASE_URL: /api/v1
+        run: npm run build
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          context: ${{ matrix.context }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Sync to S3 (immutable assets, then no-cache HTML)
+        env:
+          BUCKET: ${{ vars.FRONTEND_BUCKET }}
+        run: |
+          # Hashed assets are immutable and safe to cache forever.
+          aws s3 sync out/ "s3://$BUCKET/" --delete \
+            --exclude "*.html" \
+            --cache-control "public,max-age=31536000,immutable"
+          # HTML must always revalidate so it never points at deleted bundles.
+          aws s3 sync out/ "s3://$BUCKET/" \
+            --exclude "*" --include "*.html" \
+            --cache-control "no-cache"
+      - name: Invalidate CloudFront
+        env:
+          DIST_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*"
