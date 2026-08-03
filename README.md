@@ -37,7 +37,8 @@ for why each choice was made.
 
 *Browser → CloudFront (HTTPS): `/*` → private S3 (static Next.js export via OAC),
 `/api/*` → API Gateway → Lambda (container image; Web Adapter → uvicorn → FastAPI)
-→ Amazon Bedrock. Terraform provisions the resources; CI/CD deploys via OIDC.
+→ Amazon Bedrock. CloudWatch alarms → SNS → email for ops alerts. Terraform
+provisions the resources; CI/CD deploys via OIDC.
 Editable source: [docs/architecture.drawio](docs/architecture.drawio) — open at
 [app.diagrams.net](https://app.diagrams.net) or the VS Code Draw.io extension,
 then re-export to `docs/architecture.svg`.*
@@ -130,7 +131,7 @@ model/region.
    committed):
    ```bash
    cd infra/terraform
-   cp terraform.tfvars.example terraform.tfvars   # github_repo, bedrock model/region
+   cp terraform.tfvars.example terraform.tfvars   # github_repo, bedrock model/region, alert_email
    ```
 2. **Seed the image** — Lambda uses a container image, so push one before the first
    apply (CI does this afterwards):
@@ -172,6 +173,37 @@ invalidate CloudFront (as in step 4).
 
 ```bash
 cd infra/terraform && terraform destroy
+```
+
+## Monitoring & alerts
+
+CloudWatch alarms publish to an SNS topic (`caas-alerts`) that emails
+`alert_email`. All alarms use count/window thresholds (not single events) and
+treat missing data as *not breaching*, so a quiet app stays green instead of
+false-alarming. Defined in [infra/terraform/monitoring.tf](infra/terraform/monitoring.tf);
+thresholds live in a `locals` block there.
+
+| Alarm | Fires when |
+|---|---|
+| `caas-bedrock-failures` | ≥3 Bedrock failures / 5 min |
+| `caas-apigw-5xx` | ≥5 API Gateway 5xx / 5 min |
+| `caas-lambda-errors` | ≥3 unhandled Lambda errors / 5 min |
+| `caas-lambda-throttles` | ≥1 throttle / 5 min |
+| `caas-lambda-duration` | p95 duration > 25s (of the 29s cap) |
+
+**Why the Bedrock alarm is special:** the chat service catches Bedrock errors and
+returns a friendly fallback, so an outage produces **zero** Lambda errors and 5xx
+— invisible to default metrics. A CloudWatch Logs metric filter on the
+`"Bedrock converse call failed"` log line surfaces it as an alarmable metric (no
+app code change).
+
+**Two one-time steps when you apply:**
+
+```bash
+# 1. If the Lambda has already run, AWS auto-created its log group — import it once:
+terraform import aws_cloudwatch_log_group.backend /aws/lambda/caas-backend
+# 2. Confirm the SNS subscription: AWS emails a link to alert_email; alarms
+#    won't deliver until you click it.
 ```
 
 ## Roadmap

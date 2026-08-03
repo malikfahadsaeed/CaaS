@@ -15,3 +15,7 @@ bedrock_max_tokens = 512
 
 # ECR tag the Lambda runs (CI updates code out-of-band afterwards).
 lambda_image_tag = "latest"
+
+# Ops alerts: email that receives CloudWatch alarm notifications (one-time
+# confirmation click). Leave empty to create the SNS topic without a subscriber.
+alert_email = "fahad.malik@emumba.com"

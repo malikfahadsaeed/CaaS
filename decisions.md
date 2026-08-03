@@ -123,3 +123,23 @@ Format: **Decision · Options considered · Chosen · Why**
 - **Chosen:** **(b) `caas-`** via `project_name = "caas"`.
 - **Why:** Project-scoped, impersonal naming reads better for a shared/handoff-ready codebase than a
   personal prefix. Terraform already parameterizes the prefix through `var.project_name`.
+
+## 13. Error alerting — CloudWatch alarms → SNS email
+
+- **Options:** (a) CloudWatch alarms → SNS email; (b) SES-based custom alert mail; (c) third-party paging (PagerDuty/Opsgenie); (d) no alerting.
+- **Chosen:** **(a) CloudWatch alarms → SNS topic → email subscription** (`infra/terraform/monitoring.tf`).
+- **Why:** SNS email is the proportionate, ~$0 fit for a small serverless app. SES is for app→user mail,
+  not ops alerts; paging tools add cost/rotation machinery we don't need yet.
+- **Key insight — the alarm CloudWatch can't give for free:** `chat_service.py` deliberately catches
+  Bedrock errors and returns a friendly fallback, so a Bedrock outage produces **zero Lambda errors and
+  zero 5xx** — invisible to default metrics. A **CloudWatch Logs metric filter** on the existing
+  `logger.exception("Bedrock converse call failed")` line turns that swallowed failure into an alarmable
+  metric (custom namespace `CaaS/Backend`, metric `BedrockFailures`). No app code change needed.
+- **Alarm set:** Bedrock failures (≥3/5min), API GW `5xx` (≥5/5min), Lambda `Errors` (≥3/5min),
+  Lambda `Throttles` (≥1/5min), Lambda `Duration` p95 (>25s of the 29s cap).
+- **Design choices:** count/window thresholds (not single events) and `treat_missing_data=notBreaching`
+  to avoid alert fatigue and false alarms on a quiet app; **count-based, not rate-based**, because at low
+  traffic a percentage divides by tiny numbers and gets noisy. `alert_email` is an env-overridable var;
+  empty ⇒ topic created without a subscriber. Email needs a one-time SNS confirmation click.
+- **Consequence to plan for:** SNS email has no dedup/escalation/on-call rotation — graduate to
+  PagerDuty/Opsgenie or AWS Incident Manager if paging is ever needed.

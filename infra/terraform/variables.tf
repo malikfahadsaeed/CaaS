@@ -41,6 +41,13 @@ variable "cors_origins" {
   default     = ""
 }
 
+# --- Monitoring / alerting ---
+variable "alert_email" {
+  description = "Email address that receives CloudWatch alarm notifications via SNS. Requires a one-time confirmation click. Leave empty to create the topic without a subscription."
+  type        = string
+  default     = ""
+}
+
 # --- CI/CD (GitHub OIDC) ---
 variable "github_repo" {
   description = "GitHub repo (owner/name) allowed to assume the deploy role"

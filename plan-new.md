@@ -96,6 +96,21 @@ Keep the test jobs. Replace the ghcr `build-and-push` job with OIDC deploy jobs 
 **frontend** `next build` (export) → two-pass `aws s3 sync` (immutable assets, then no-cache HTML) →
 CloudFront invalidation.
 
+## Monitoring & alerting (`infra/terraform/monitoring.tf`)
+
+CloudWatch alarms → SNS topic `caas-alerts` → email (`alert_email`, one-time confirmation click).
+Count/window thresholds (not single events) + `treat_missing_data = notBreaching` to avoid alert
+fatigue and false alarms on a quiet app; count-based, not rate-based (a percentage divides by tiny
+numbers at low traffic). Alarms: **Bedrock failures** (≥3/5min), **API GW 5xx** (≥5/5min), **Lambda
+errors** (≥3/5min), **Lambda throttles** (≥1/5min), **Lambda duration p95** (>25s). See
+[decisions.md](decisions.md) #13.
+
+The **Bedrock-failure alarm** is the one CloudWatch can't give for free: `chat_service` catches
+Bedrock errors and returns a fallback, so an outage yields zero Lambda errors / 5xx. A **Logs metric
+filter** on the existing `"Bedrock converse call failed"` line makes it alarmable — no app code change.
+One-time apply steps: `terraform import aws_cloudwatch_log_group.backend /aws/lambda/caas-backend`
+(if the function already ran) and confirm the SNS email subscription.
+
 ## Docs
 
 Update `docs/architecture.drawio` + `docs/architecture.svg` and the README to the serverless

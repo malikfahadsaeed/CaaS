@@ -37,3 +37,8 @@ output "gha_deploy_role_arn" {
   description = "IAM role GitHub Actions assumes via OIDC to deploy"
   value       = aws_iam_role.gha_deploy.arn
 }
+
+output "alerts_topic_arn" {
+  description = "SNS topic that CloudWatch alarms publish to (subscribe more endpoints here)"
+  value       = aws_sns_topic.alerts.arn
+}
