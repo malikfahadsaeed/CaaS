@@ -138,7 +138,11 @@ model/region.
    terraform init && terraform apply -target=aws_ecr_repository.backend
    REPO=$(terraform output -raw ecr_repository_url)
    aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin "${REPO%/*}"
-   docker build -t "$REPO:latest" ../../backend && docker push "$REPO:latest"
+   # --provenance/--sbom=false and a single --platform are required: Lambda
+   # rejects buildx attestation manifests / multi-platform image indexes.
+   # Note the braces on ${REPO}: in zsh, "$REPO:latest" applies a :l modifier.
+   docker buildx build --platform linux/amd64 --provenance=false --sbom=false \
+     -t "${REPO}:latest" --push ../../backend
    ```
 3. **Provision** — creates S3, CloudFront, API Gateway, Lambda, ECR, IAM and the
    GitHub OIDC deploy role:
