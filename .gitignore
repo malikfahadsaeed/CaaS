@@ -222,3 +222,10 @@ __marimo__/
 learning-notes.md
 /plan.md
 /info.md
+/explain.md
+/new-info.md
+/claude.md
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store
