@@ -2,7 +2,104 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens. Neutral surfaces are fixed per theme; the brand hues
+ * (--brand / --brand-2) are injected at runtime from lib/theme.ts so a tenant
+ * can rebrand without touching CSS. Defaults below keep things sane pre-hydration.
+ */
+:root {
+  --brand: #4f46e5;
+  --brand-2: #7c3aed;
+  --brand-glow: rgba(79, 70, 229, 0.45);
+
+  --surface: #ffffff;
+  --surface-2: #f6f7fb;
+  --surface-3: #eef1f7;
+  --border: #e4e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+}
+
+.dark {
+  --brand-glow: rgba(124, 58, 237, 0.42);
+
+  --surface: #14161d;
+  --surface-2: #0b0c11;
+  --surface-3: #1d212b;
+  --border: #272b36;
+  --text: #f1f3f8;
+  --text-muted: #9aa4b8;
+}
+
 html,
 body {
   height: 100%;
+}
+
+body {
+  font-family: theme("fontFamily.sans");
+  background-color: var(--surface-2);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient brand glow behind the app shell. */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, var(--brand-glow), transparent 60%),
+    radial-gradient(50rem 40rem at 110% 10%, rgba(124, 58, 237, 0.18), transparent 55%);
+  opacity: 0.5;
+}
+
+.dark .app-backdrop {
+  opacity: 0.35;
+}
+
+/* Frosted panel used by the sidebar, header and composer. */
+.glass {
+  background-color: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Slim, unobtrusive scrollbars. */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+}
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted);
+}
+
+/* Gradient text used for hero headlines and the wordmark. */
+.text-gradient {
+  background-image: linear-gradient(120deg, var(--brand), var(--brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/*
+ * On the dark ground the brand's darker end reads as near-black, so lighten
+ * both stops (theme-driven via color-mix) to keep the type crisp and legible.
+ */
+.dark .text-gradient {
+  background-image: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--brand) 48%, #ffffff),
+    color-mix(in srgb, var(--brand-2) 60%, #ffffff)
+  );
 }

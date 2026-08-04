@@ -19,7 +19,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
   }, [messages, isTyping]);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
       {messages.map((message) => (
         <MessageBubble key={message.id} message={message} />
       ))}
@@ -32,15 +32,21 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
   return (
-    <div className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
+    <div className={`flex animate-fade-in-up items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
       <Avatar role={isUser ? "user" : "assistant"} size="sm" />
-      <div
-        className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
-          isUser ? "text-white" : "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100"
-        }`}
-        style={isUser ? { backgroundColor: chatTheme.primaryColor } : undefined}
-      >
-        {message.content}
+      <div className="flex max-w-[82%] flex-col gap-1">
+        <span className={`px-1 text-xs text-muted ${isUser ? "text-right" : ""}`}>
+          {isUser ? "You" : chatTheme.botName}
+        </span>
+        <div
+          className={
+            isUser
+              ? "whitespace-pre-wrap rounded-2xl rounded-tr-md bg-[linear-gradient(135deg,var(--brand),var(--brand-2))] px-4 py-3 text-sm leading-relaxed text-white shadow-glow"
+              : "whitespace-pre-wrap rounded-2xl rounded-tl-md border border-border bg-surface px-4 py-3 text-sm leading-relaxed text-content shadow-soft"
+          }
+        >
+          {message.content}
+        </div>
       </div>
     </div>
   );
@@ -48,12 +54,12 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex animate-fade-in-up items-start gap-3">
       <Avatar role="assistant" size="sm" />
-      <div className="flex gap-1 rounded-2xl bg-slate-100 px-4 py-3 shadow-sm dark:bg-slate-800">
+      <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-md border border-border bg-surface px-4 py-4 shadow-soft">
         <Dot delay="0ms" />
-        <Dot delay="150ms" />
-        <Dot delay="300ms" />
+        <Dot delay="200ms" />
+        <Dot delay="400ms" />
       </div>
     </div>
   );
@@ -62,7 +68,7 @@ function TypingIndicator() {
 function Dot({ delay }: { delay: string }) {
   return (
     <span
-      className="h-2 w-2 animate-bounce rounded-full bg-slate-400 dark:bg-slate-500"
+      className="h-2 w-2 animate-blink rounded-full bg-brand"
       style={{ animationDelay: delay }}
     />
   );

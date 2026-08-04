@@ -1,35 +1,46 @@
 "use client";
 
-import { Avatar } from "@/components/Avatar";
+import { MenuIcon, PlusIcon } from "@/components/icons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { chatTheme } from "@/lib/theme";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
+  onOpenMenu: () => void;
   canReset: boolean;
 }
 
-export function ChatHeader({ onNewChat, canReset }: ChatHeaderProps) {
+export function ChatHeader({ onNewChat, onOpenMenu, canReset }: ChatHeaderProps) {
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
-      <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
-        <Avatar role="assistant" size="md" />
+    <header className="glass sticky top-0 z-10 border-b border-border">
+      <div className="flex items-center gap-3 px-4 py-3">
+        {/* Mobile menu */}
+        <button
+          type="button"
+          onClick={onOpenMenu}
+          aria-label="Open menu"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted transition hover:bg-surface-3 hover:text-content lg:hidden"
+        >
+          <MenuIcon className="h-5 w-5" />
+        </button>
 
-        <div className="flex-1 leading-tight">
-          <h1 className="text-sm font-semibold">{chatTheme.appName}</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{chatTheme.tagline}</p>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <h1 className="truncate text-sm font-semibold text-content">{chatTheme.botName}</h1>
+          <span className="hidden items-center gap-1.5 rounded-full border border-border px-2 py-0.5 text-xs text-muted sm:inline-flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+            Online
+          </span>
         </div>
 
-        <span className="hidden items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 sm:flex">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-          Online
-        </span>
+        <ThemeToggle />
 
         <button
           type="button"
           onClick={onNewChat}
           disabled={!canReset}
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="hidden items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted transition hover:bg-surface-3 hover:text-content disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex"
         >
+          <PlusIcon className="h-3.5 w-3.5" />
           New chat
         </button>
       </div>
